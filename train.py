@@ -40,8 +40,8 @@ parser.add_argument('--BATCH_SIZE', type=int, default=128)
 # 学习率
 parser.add_argument('--LR', type=float, default=0.001)
 # 预训练模型参数
-parser.add_argument('--pkl_path', type=str, default="")
-# 训练参数json
+parser.add_argument('--pkl_path', type=str, default="weights/mobilenetv2_scse_elu/BarkVN-50/2024-01-15_00.13.40/last.pkl")
+# 训练参数json（此参数目前还没有任何实际作用）
 parser.add_argument('--json_path', type=str, default="")
 # 未知参数
 parser.add_argument('--betas', type=tuple, default=(0.9, 0.999))
@@ -60,9 +60,9 @@ parser.add_argument('--log_interval', type=int, default=3)
 # 每隔多少个epoch进行一次验证
 parser.add_argument('--val_interval', type=int, default=1)
 # 训练的数据集名
-parser.add_argument('--dataset_dir', type=str, default="Trunk")
+parser.add_argument('--dataset_dir', type=str, default="BarkVN-50")
 # 训练的模型名
-parser.add_argument('--model_dir', type=str, default="mobilenetv2")
+parser.add_argument('--model_dir', type=str, default="mobilenetv2_scse_elu")
 # 数据形状
 parser.add_argument('--split_ratio', type=str, default="(8, 1, 1)")
 # 随机数种子
@@ -189,13 +189,13 @@ if os.path.exists(pkl_path):
     # 保存学习率
     lr_curve.append(LR)
     # 评估训练集
-    net, train_accuracy_global = eval_model(net, train_loader, device)
+    net, train_accuracy_global = eval_model(net, train_loader, num_classes, device)
     train_curve.append(train_accuracy_global)
     # 评估验证集
-    net, valid_accuracy_global = eval_model(net, valid_loader, device)
+    net, valid_accuracy_global = eval_model(net, valid_loader, num_classes, device)
     valid_curve.append(valid_accuracy_global)
     # 评估测试集
-    net, test_accuracy = eval_model(net, test_loader, device)
+    net, test_accuracy = eval_model(net, test_loader, num_classes, device)
     print(f'train_acc={train_accuracy_global},valid_acc={valid_accuracy_global},test_acc={test_accuracy}')
 
 # ============================ step 4/7 损失函数 ============================
@@ -291,7 +291,7 @@ for epoch in range(MAX_EPOCH):
         train_accuracy_global = train_accuracy
 
     # 添加功能计算验证集的准确率
-    net, valid_accuracy = eval_model(net, valid_loader, device)
+    net, valid_accuracy = eval_model(net, valid_loader, num_classes, device)
     valid_curve.append(valid_accuracy)
     # 记录最优的准确率
     if valid_accuracy > valid_accuracy_global:
@@ -314,7 +314,7 @@ for epoch in range(MAX_EPOCH):
 
 # ============================ step 7/7 保存 ============================
 # 添加功能计算测试集的准确率
-net, test_accuracy = eval_model(net, test_loader, device)
+net, test_accuracy = eval_model(net, test_loader, num_classes, device)
 
 # 保存最终学习率
 args['final_learning_rate'] = learning_rate

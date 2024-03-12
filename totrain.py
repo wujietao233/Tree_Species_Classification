@@ -1,9 +1,9 @@
 import os
 
 dataset_dir = 'BarkVN-50'
-model_dir = 'resnet50'
+model_dir = 'mobilenetv3_large'
 LR = 0.001
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 MAX_EPOCH = 200
 seed = 0
 scheduler_factor = 0.5

@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import torchmetrics
 import os
 import random
 import shutil
@@ -6,7 +7,7 @@ from tqdm import tqdm
 import torch
 
 
-def plot_curve(train_curve, valid_curve, test_accuracy, xlabel="", ylabel="", title="",savepath=""):
+def plot_curve(train_curve, valid_curve, test_accuracy, xlabel="", ylabel="", title="", savepath=""):
     """
     绘制训练曲线
     """
@@ -52,10 +53,15 @@ def make_directory(directory_path):
         os.makedirs(directory_path)
 
 
-def eval_model(net, data_loader, device):
+def eval_model(net, data_loader, num_classes, device):
     """
-    评估模型
+    评估模型，包括分类的准确率Accuracy、精确率Precision、召回率Recall、F1分数F1 Score
     """
+    # 创建一个metrics的计算对象
+    # metrics_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes).to(device)
+    # metrics_recall = torchmetrics.Recall(task="multiclass", average='none', num_classes=num_classes).to(device)
+    # metrics_precision = torchmetrics.Precision(task="multiclass", average='none', num_classes=num_classes).to(device)
+
     correct = torch.tensor(0., device=device)
     total = 0.
     # 将网络模式设置为评估
@@ -79,8 +85,18 @@ def eval_model(net, data_loader, device):
             total += label.size(0)
             # 正确的个数
             correct += sum(predicted == label)
+            # 每个batch进行计算迭代
+            # metrics_acc(predicted, label)
+            # metrics_recall(predicted, label)
+            # metrics_precision(predicted, label)
+
         # 这是验证集的准确率
         accuracy = correct.item() / total
+        # 添加精确率、召回率、F1分数
+        # acc = metrics_acc.compute()
+        # recall = metrics_recall.compute()
+        # precision = metrics_precision.compute()
+
         return net, accuracy
 
 
