@@ -25,7 +25,7 @@ from model.densenet import densenet121
 from model.resnet import resnet50
 
 # 导入自定义工具包
-from utils import plot_curve, make_directory, split_dataset, eval_model
+from utils import plot_curve, make_directory, split_dataset, eval_model, Logger
 
 # 设备
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -40,8 +40,8 @@ parser.add_argument('--BATCH_SIZE', type=int, default=128)
 # 学习率
 parser.add_argument('--LR', type=float, default=0.001)
 # 预训练模型参数
-parser.add_argument('--pkl_path', type=str, default="weights/mobilenetv2_scse_elu/BarkVN-50/2024-01-15_00.13.40/last.pkl")
-# 训练参数json（此参数目前还没有任何实际作用）
+parser.add_argument('--pkl_path', type=str, default="")
+# 训练参数json
 parser.add_argument('--json_path', type=str, default="")
 # 未知参数
 parser.add_argument('--betas', type=tuple, default=(0.9, 0.999))
@@ -60,9 +60,9 @@ parser.add_argument('--log_interval', type=int, default=3)
 # 每隔多少个epoch进行一次验证
 parser.add_argument('--val_interval', type=int, default=1)
 # 训练的数据集名
-parser.add_argument('--dataset_dir', type=str, default="BarkVN-50")
+parser.add_argument('--dataset_dir', type=str, default="Trunk")
 # 训练的模型名
-parser.add_argument('--model_dir', type=str, default="mobilenetv2_scse_elu")
+parser.add_argument('--model_dir', type=str, default="mobilenetv2")
 # 数据形状
 parser.add_argument('--split_ratio', type=str, default="(8, 1, 1)")
 # 随机数种子
@@ -88,6 +88,7 @@ model_dir = args['model_dir']
 train_ratio, valid_ratio, test_ratio = eval(args['split_ratio'])
 seed = args['seed']
 
+
 # 设置随机数种子
 random.seed(seed)
 
@@ -99,12 +100,16 @@ make_directory(f"data/{dataset_dir}")
 # 获取当前时间
 strftime = time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime())
 
+# 初始化TensorBoard
+logger = Logger(f"ten_log\\lr{LR}_min{scheduler_min_lr}_fac_{scheduler_factor}_{strftime}")
+
 # 创建文件夹
 make_directory(f"weights/{model_dir}/{dataset_dir}/{strftime}")
 
 # ============================ step 2/7 数据 ============================
 # 随机划分数据集
 print(f'根据随机数种子{seed}划分数据集{dataset_dir}..')
+# split_dataset(f'data/{dataset_dir}', seed=seed, train_ratio=train_ratio, val_ratio=valid_ratio, test_ratio=test_ratio)
 split_dataset(f'data/{dataset_dir}', seed=seed, train_ratio=train_ratio, val_ratio=valid_ratio, test_ratio=test_ratio)
 
 # 定义数据分割目录和训练/验证数据目录
@@ -189,13 +194,13 @@ if os.path.exists(pkl_path):
     # 保存学习率
     lr_curve.append(LR)
     # 评估训练集
-    net, train_accuracy_global = eval_model(net, train_loader, num_classes, device)
+    net, train_accuracy_global = eval_model(net, train_loader, device)
     train_curve.append(train_accuracy_global)
     # 评估验证集
-    net, valid_accuracy_global = eval_model(net, valid_loader, num_classes, device)
+    net, valid_accuracy_global = eval_model(net, valid_loader, device)
     valid_curve.append(valid_accuracy_global)
     # 评估测试集
-    net, test_accuracy = eval_model(net, test_loader, num_classes, device)
+    net, test_accuracy = eval_model(net, test_loader, device)
     print(f'train_acc={train_accuracy_global},valid_acc={valid_accuracy_global},test_acc={test_accuracy}')
 
 # ============================ step 4/7 损失函数 ============================
@@ -278,6 +283,8 @@ for epoch in range(MAX_EPOCH):
         loop.set_description(f'{model_dir.capitalize()} {dataset_dir.capitalize()} Epoch [{epoch}/{MAX_EPOCH}]')
         loop.set_postfix(loss=print_loss, acc=acc, lr=learning_rate)
 
+        logger.write(epoch, stage='Train', loss=print_loss, acc=acc, lr=learning_rate)
+
     # 计算训练集的准确率
     train_accuracy = train_correct.item() / train_total
     # 添加准确率
@@ -291,7 +298,7 @@ for epoch in range(MAX_EPOCH):
         train_accuracy_global = train_accuracy
 
     # 添加功能计算验证集的准确率
-    net, valid_accuracy = eval_model(net, valid_loader, num_classes, device)
+    net, valid_accuracy = eval_model(net, valid_loader, device)
     valid_curve.append(valid_accuracy)
     # 记录最优的准确率
     if valid_accuracy > valid_accuracy_global:
@@ -312,9 +319,11 @@ for epoch in range(MAX_EPOCH):
     # 设置进度条右边的内容
     print(f'train_acc={train_accuracy}, valid_acc={valid_accuracy}')
 
+    logger.write(epoch, stage='Valid', loss=print_loss, acc=valid_accuracy, lr=learning_rate)
+
 # ============================ step 7/7 保存 ============================
 # 添加功能计算测试集的准确率
-net, test_accuracy = eval_model(net, test_loader, num_classes, device)
+net, test_accuracy = eval_model(net, test_loader, device)
 
 # 保存最终学习率
 args['final_learning_rate'] = learning_rate
@@ -349,3 +358,5 @@ plot_curve(train_curve, valid_curve, test_accuracy, xlabel='epoch', ylabel='accu
            title=f'{model_dir} {dataset_dir}',
            savepath=f'weights/{model_dir}/{dataset_dir}/{strftime}/train_{max(train_curve)}_valid_{max(valid_curve)}_test_{test_accuracy}.png')
 # plt.show()
+
+logger.close()
