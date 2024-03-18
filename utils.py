@@ -169,4 +169,3 @@ def split_dataset(rootPath, seed=0, train_ratio=0.8, val_ratio=0.1, test_ratio=0
             for img in set:
                 # 保存文件
                 shutil.copy2(f'{rawData}/{sub_dir}/{img}', f'{splitData}/{split_dir}/{sub_dir}/{img}')
-

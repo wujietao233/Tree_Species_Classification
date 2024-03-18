@@ -360,4 +360,3 @@ plot_curve(train_curve, valid_curve, test_accuracy, xlabel='epoch', ylabel='accu
 # plt.show()
 
 logger.close()
-
