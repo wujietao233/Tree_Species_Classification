@@ -47,6 +47,8 @@ parser.add_argument('--json_path', type=str, default="")
 parser.add_argument('--betas', type=tuple, default=(0.9, 0.999))
 # 是否使用学习率调度器？
 parser.add_argument('--use_scheduler', type=int, default=1)
+# 是否使用logger？
+parser.add_argument('--use_logger', type=int, default=0)
 # 学习率调度器衰减倍率
 parser.add_argument('--scheduler_factor', type=float, default=0.9)
 # 学习率调度器衰减次数
@@ -77,6 +79,7 @@ LR = args['LR']
 pkl_path = args['pkl_path']
 betas = args['betas']
 use_scheduler = args['use_scheduler']
+use_logger = args['use_logger']
 scheduler_factor = args['scheduler_factor']
 scheduler_patience = args['scheduler_patience']
 scheduler_min_lr = args['scheduler_min_lr']
@@ -100,8 +103,9 @@ make_directory(f"data/{dataset_dir}")
 # 获取当前时间
 strftime = time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime())
 
-# 初始化TensorBoard
-logger = Logger(f"ten_log\\lr{LR}_min{scheduler_min_lr}_fac_{scheduler_factor}_{strftime}")
+if use_logger:
+    # 初始化TensorBoard
+    logger = Logger(f"ten_log\\lr{LR}_min{scheduler_min_lr}_fac_{scheduler_factor}_{strftime}")
 
 # 创建文件夹
 make_directory(f"weights/{model_dir}/{dataset_dir}/{strftime}")
@@ -283,7 +287,8 @@ for epoch in range(MAX_EPOCH):
         loop.set_description(f'{model_dir.capitalize()} {dataset_dir.capitalize()} Epoch [{epoch}/{MAX_EPOCH}]')
         loop.set_postfix(loss=print_loss, acc=acc, lr=learning_rate)
 
-        logger.write(epoch, stage='Train', loss=print_loss, acc=acc, lr=learning_rate)
+        if use_logger:
+            logger.write(epoch, stage='Train', loss=print_loss, acc=acc, lr=learning_rate)
 
     # 计算训练集的准确率
     train_accuracy = train_correct.item() / train_total
@@ -319,7 +324,8 @@ for epoch in range(MAX_EPOCH):
     # 设置进度条右边的内容
     print(f'train_acc={train_accuracy}, valid_acc={valid_accuracy}')
 
-    logger.write(epoch, stage='Valid', loss=print_loss, acc=valid_accuracy, lr=learning_rate)
+    if use_logger:
+        logger.write(epoch, stage='Valid', loss=print_loss, acc=valid_accuracy, lr=learning_rate)
 
 # ============================ step 7/7 保存 ============================
 # 添加功能计算测试集的准确率
@@ -358,5 +364,5 @@ plot_curve(train_curve, valid_curve, test_accuracy, xlabel='epoch', ylabel='accu
            title=f'{model_dir} {dataset_dir}',
            savepath=f'weights/{model_dir}/{dataset_dir}/{strftime}/train_{max(train_curve)}_valid_{max(valid_curve)}_test_{test_accuracy}.png')
 # plt.show()
-
-logger.close()
+if use_logger:
+    logger.close()

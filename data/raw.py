@@ -1,6 +1,6 @@
 import os
 
-datasets = 'Ztree-Bark'
+datasets = 'Bark-Combination-88'
 path = f'{datasets}/{datasets}'
 
 listdir = os.listdir(path)

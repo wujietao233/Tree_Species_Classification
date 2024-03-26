@@ -1,16 +1,14 @@
 import os
 
-'''
-tensorboard可视化命令：
-tensorboard --logdir 'I:\Python program\mobilenet_tree\Tsc\ten_log'
-tensorboard --logdir 'I:\Python program\mobilenet_tree\Tsc\ten_log\lr0.01_min1e-06_fac_0.25_2024-03-09_23.19.07' --port 6007
-'''
+# tensorboard可视化命令：
+# tensorboard --logdir 'I:\Python program\mobilenet_tree\Tsc\ten_log'
+# tensorboard --logdir 'I:\Python program\mobilenet_tree\Tsc\ten_log\lr0.01_min1e-06_fac_0.25_2024-03-09_23.19.07' --port 6007
 
-dataset_dir = 'BarkVN-50'
+dataset_dir = 'Bark-Combination-88'
 model_dir = 'mobilenetv3_large'
-LR = 0.0008
-BATCH_SIZE = 64
-MAX_EPOCH = 200
+LR = 0.001
+BATCH_SIZE = 16
+MAX_EPOCH = 100
 seed = 0
 scheduler_factor = 0.5
 scheduler_min_lr = 1e-06
