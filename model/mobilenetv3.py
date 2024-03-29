@@ -169,8 +169,12 @@ class MobileNetV3_small(nn.Module):
         out = Hswish(self.bn1(self.conv1(x)))
         out = self.layers(out)
         out = self.bn2(self.conv2(out))  #
+
         se = SEModule(out.size(1))
+        if torch.cuda.is_available():
+            se.cuda()
         out = Hswish(se(out))
+
         out = F.avg_pool2d(out, 7)
         out = Hswish(self.conv3(out))
         out = self.conv4(out)
@@ -179,15 +183,3 @@ class MobileNetV3_small(nn.Module):
         out = out.view(a, b)
         return out
 
-
-def test():
-    # net = MobileNetV3_small()
-    net = MobileNetV3_large()
-    x = torch.randn(2, 3, 224, 224)
-    y = net(x)
-    print(y.size())
-    print(y)
-
-
-if __name__ == "__main__":
-    test()

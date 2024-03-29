@@ -18,7 +18,8 @@ from model.mobilenetv2_elu import MobileNetV2_ELU
 from model.mobilenetv2_scse import MobileNetV2_SCSE
 from model.mobilenetv2_scse_elu import MobileNetV2_SCSE_ELU
 from model.mobilenetv2 import MobileNetV2
-from model.mobilenetv3 import MobileNetV3_large
+from model.mobilenetv3 import MobileNetV3_large, MobileNetV3_small
+from model.vision_transformer import Vision_Transformer
 from model.vggnet import vgg
 from model.googlenet import GoogLeNet
 from model.densenet import densenet121
@@ -90,7 +91,6 @@ dataset_dir = args['dataset_dir']
 model_dir = args['model_dir']
 train_ratio, valid_ratio, test_ratio = eval(args['split_ratio'])
 seed = args['seed']
-
 
 # 设置随机数种子
 random.seed(seed)
@@ -175,6 +175,8 @@ dict_net = {
     'mobilenetv2_scse': MobileNetV2_SCSE(num_classes=num_classes),
     'mobilenetv2_scse_elu': MobileNetV2_SCSE_ELU(num_classes=num_classes),
     'mobilenetv3_large': MobileNetV3_large(num_classes=num_classes),
+    'mobilenetv3_small': MobileNetV3_small(num_classes=num_classes),
+    'vision_transformer': Vision_Transformer(num_classes=num_classes),
     'vggnet16': vgg(model_name='vgg16', num_classes=num_classes, init_weights=False),
     'googlenet': GoogLeNet(num_classes=num_classes, aux_logits=False),
     'densenet121': densenet121(num_classes=num_classes),
